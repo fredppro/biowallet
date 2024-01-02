@@ -33,6 +33,6 @@ module.exports = {
     enabled: true,
   },
   paths: {
-    artifacts: "../fronted/artifacts",
+    artifacts: "../frontend/artifacts",
   },
 };

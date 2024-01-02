@@ -1,0 +1,9 @@
+from "hashes/sha256/512bitPacked" import main as sha256packed;
+
+def main(private field patientPrivateKey0, private field patientPrivateKey1, private field healthcarePrivateKey0, private field healthcarePrivateKey1, field hashPart0, field hashPart1) {
+    field[2] hash = sha256packed([patientPrivateKey0, patientPrivateKey1, healthcarePrivateKey0, healthcarePrivateKey1]);
+    
+    assert(hash[0] == hashPart0);
+    assert(hash[1] == hashPart1);
+    return;
+}
