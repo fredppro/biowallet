@@ -13,7 +13,7 @@ module.exports = {
   allowUnlimitedContractSize: true,
   networks: {
     hardhat: {},
-    ETH_MAINNET: {
+    /* ETH_MAINNET: {
       accounts: [`${process.env.PRIVATE_KEY}`],
       url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
     },
@@ -24,7 +24,7 @@ module.exports = {
     ETH_SEPOLIA: {
       accounts: [`${process.env.PRIVATE_KEY}`],
       url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-    },
+    }, */
   },
   etherscan: {
     apiKey: `${process.env.ETHERSCAN_API_KEY}`,
