@@ -1,6 +1,7 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.23;
 
-contract MedicalRecords {
+contract AssetManagement {
     struct Patient {
         address patientAddress;
         string[] medicalAssetIds;
@@ -11,14 +12,29 @@ contract MedicalRecords {
 
     // Ensure that only the patient can call the function
     modifier onlyPatient() {
-        require(patients[msg.sender].patientAddress == msg.sender, "Only the patient can perform this action");
+        require(
+            patients[msg.sender].patientAddress == msg.sender,
+            "Only the patient can perform this action"
+        );
         _;
     }
 
     // Ensure that only authorized entities can access the data
     modifier onlyAuthorized(address _patient) {
-        require(patients[_patient].accessGranted[msg.sender] || msg.sender == _patient, "Not authorized");
+        require(
+            patients[_patient].accessGranted[msg.sender] ||
+                msg.sender == _patient,
+            "Not authorized"
+        );
         _;
+    }
+
+    function registerPatient() public {
+        require(
+            patients[msg.sender].patientAddress == address(0),
+            "Patient already registered"
+        );
+        patients[msg.sender].patientAddress = msg.sender;
     }
 
     // Function for a patient to add a new medical asset ID
@@ -37,7 +53,12 @@ contract MedicalRecords {
     }
 
     // Function to view a patient's medical asset IDs
-    function viewMedicalAssetIds(address _patient) public view onlyAuthorized(_patient) returns (string[] memory) {
+    function viewMedicalAssetIds(address _patient)
+        public
+        view
+        onlyAuthorized(_patient)
+        returns (string[] memory)
+    {
         return patients[_patient].medicalAssetIds;
     }
 }

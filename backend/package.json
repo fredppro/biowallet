@@ -4,13 +4,16 @@
 	"private": true,
 	"scripts": {
 		"build": "npx hardhat compile",
-		"deploy-testnet": "npx hardhat run ./scripts/MyContract_deploy.js --network ETH_SPOLIA",
-		"deploy": "npx hardhat run ./scripts/MyContract_deploy.js --network ETH_MAINNET",
+		"deploy-sepolia": "npx hardhat run ./scripts/deploy-contracts.js --network ETH_SEPOLIA",
+		"deploy-goerli": "npx hardhat run ./scripts/deploy-contracts.js --network ETH_GOERLI",
+		"deploy": "npx hardhat run ./scripts/deploy-contracts.js --network ETH_MAINNET",
 		"node": "npx hardhat node",
-		"deploy-local": "npx hardhat run ./scripts/MyContract_deploy.js --network localhost"
+		"deploy-local": "npx hardhat run ./scripts/deploy-contracts.js --network localhost",
+		"test-local-only": "npx hardhat test --network localhost ./test/asset-management-test.js"
 	},
 	"dependencies": {
 		"@openzeppelin/contracts": "^4.7.3",
+		"crypto-js": "^4.2.0",
 		"dotenv": "^16.0.2"
 	},
 	"devDependencies": {
