@@ -3,19 +3,19 @@ const { ethers } = require("hardhat");
 const CryptoJS = require("crypto-js");
 
 describe("AssetManagement Contract", function () {
-  let MedicalRecords;
-  let medicalRecords;
+  let AssetManagement;
+  let assetManagement;
   let patient;
   let healthcareProvider;
   let other;
 
   beforeEach(async function () {
-    MedicalRecords = await ethers.getContractFactory("AssetManagement");
-    medicalRecords = await MedicalRecords.deploy();
-    await medicalRecords.deployed();
+    AssetManagement = await ethers.getContractFactory("AssetManagement");
+    assetManagement = await AssetManagement.deploy();
+    await assetManagement.deployed();
 
     [patient, healthcareProvider, other] = await ethers.getSigners();
-    await medicalRecords.connect(patient).registerPatient();
+    await assetManagement.connect(patient).registerPatient();
   });
 
   function generateHash(realId) {
@@ -26,68 +26,71 @@ describe("AssetManagement Contract", function () {
     const realId = "asset-123";
     const hashedId = generateHash(realId);
 
-    await medicalRecords.connect(patient).addMedicalAssetId(hashedId);
+    await assetManagement.connect(patient).addMedicalAssetId(hashedId);
 
     // Retrieve and verify the hashed ID
-    const storedHashedId = await medicalRecords
+    const storedHashedId = await assetManagement
       .connect(patient)
-      .viewMedicalAssetIds(patient.address);
-    expect(storedHashedId[0]).to.equal(hashedId);
+      .viewMedicalAssetId(patient.address, hashedId);
+    expect(storedHashedId).to.equal(hashedId);
 
     console.log("Stored hashed ID: ", storedHashedId);
   });
 
-  it("Should allow patient to grant access to a healthcare provider", async function () {
-    await medicalRecords
+  it("Should allow patient to grant access to a specific asset ID to a healthcare provider", async function () {
+    const assetId = "asset1";
+    await assetManagement.connect(patient).addMedicalAssetId(assetId);
+    await assetManagement
       .connect(patient)
-      .grantAccess(healthcareProvider.address);
+      .grantAccessToAssetId(assetId, healthcareProvider.address);
 
-    // Granting access doesn't change asset IDs, but it does change access rights
-    // To verify, attempt to view patient's asset IDs as the healthcare provider
-    await medicalRecords.connect(patient).addMedicalAssetId("asset1");
-    const assetIds = await medicalRecords
+    // Check if the healthcare provider can access the specific asset ID
+    const retrievedAssetId = await assetManagement
       .connect(healthcareProvider)
-      .viewMedicalAssetIds(patient.address);
-    expect(assetIds).to.include("asset1");
+      .viewMedicalAssetId(patient.address, assetId);
+    expect(retrievedAssetId).to.equal(assetId);
   });
 
-  it("Should prevent unauthorized entities from viewing medical asset IDs", async function () {
-    await medicalRecords.connect(patient).addMedicalAssetId("asset2");
+  it("Should prevent unauthorized entities from viewing a specific medical asset ID", async function () {
+    const assetId = "asset2";
+    await assetManagement.connect(patient).addMedicalAssetId(assetId);
 
     // The "other" entity should not have access
     await expect(
-      medicalRecords.connect(other).viewMedicalAssetIds(patient.address)
-    ).to.be.revertedWith("Not authorized");
+      assetManagement
+        .connect(other)
+        .viewMedicalAssetId(patient.address, assetId)
+    ).to.be.revertedWith("Not authorized for this asset ID");
   });
 
-  it("Should allow patient to grant access to a healthcare provider and check accessibility", async function () {
-    await medicalRecords
+  it("Should allow patient to revoke access to a specific asset ID from a healthcare provider", async function () {
+    const assetId = "asset3";
+    await assetManagement.connect(patient).addMedicalAssetId(assetId);
+    await assetManagement
       .connect(patient)
-      .grantAccess(healthcareProvider.address);
-
-    // Patient adds an asset ID
-    await medicalRecords.connect(patient).addMedicalAssetId("asset1");
-
-    // Check if the healthcare provider can access the patient's asset IDs
-    const assetIds = await medicalRecords
-      .connect(healthcareProvider)
-      .viewMedicalAssetIds(patient.address);
-    expect(assetIds).to.include("asset1");
-  });
-
-  it("Should allow patient to revoke access from a healthcare provider and check inaccessibility", async function () {
-    // First, grant then revoke the access
-    await medicalRecords
+      .grantAccessToAssetId(assetId, healthcareProvider.address);
+    await assetManagement
       .connect(patient)
-      .grantAccess(healthcareProvider.address);
-    await medicalRecords
-      .connect(patient)
-      .revokeAccess(healthcareProvider.address);
+      .revokeAccessToAssetId(assetId, healthcareProvider.address);
 
+    // After revoking, the healthcare provider should no longer have access to the specific asset ID
     await expect(
-      medicalRecords
+      assetManagement
         .connect(healthcareProvider)
-        .viewMedicalAssetIds(patient.address)
-    ).to.be.revertedWith("Not authorized");
+        .viewMedicalAssetId(patient.address, assetId)
+    ).to.be.revertedWith("Not authorized for this asset ID");
+  });
+
+  it("Should allow patient to view all their medical asset IDs", async function () {
+    const assetId1 = "asset1";
+    const assetId2 = "asset2";
+    await assetManagement.connect(patient).addMedicalAssetId(assetId1);
+    await assetManagement.connect(patient).addMedicalAssetId(assetId2);
+
+    // Retrieve and verify all asset IDs
+    const assetIds = await assetManagement.connect(patient).viewAllAssetIds();
+    expect(assetIds).to.include(assetId1);
+    expect(assetIds).to.include(assetId2);
+    console.log("All stored asset IDs: ", assetIds);
   });
 });

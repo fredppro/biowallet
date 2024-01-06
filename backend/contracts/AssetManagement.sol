@@ -5,7 +5,7 @@ contract AssetManagement {
     struct Patient {
         address patientAddress;
         string[] medicalAssetIds;
-        mapping(address => bool) accessGranted;
+        mapping(string => mapping(address => bool)) accessGrantedPerAssetId;
     }
 
     mapping(address => Patient) private patients;
@@ -19,12 +19,15 @@ contract AssetManagement {
         _;
     }
 
-    // Ensure that only authorized entities can access the data
-    modifier onlyAuthorized(address _patient) {
+    // Ensure that only authorized entities can access the specific data
+    modifier onlyAuthorizedForAssetId(
+        address _patient,
+        string memory _assetId
+    ) {
         require(
-            patients[_patient].accessGranted[msg.sender] ||
+            patients[_patient].accessGrantedPerAssetId[_assetId][msg.sender] ||
                 msg.sender == _patient,
-            "Not authorized"
+            "Not authorized for this asset ID"
         );
         _;
     }
@@ -42,23 +45,53 @@ contract AssetManagement {
         patients[msg.sender].medicalAssetIds.push(_id);
     }
 
-    // Function for a patient to grant access to their medical assets
-    function grantAccess(address _entity) public onlyPatient {
-        patients[msg.sender].accessGranted[_entity] = true;
+    // Function for a patient to grant access to a specific medical asset
+    function grantAccessToAssetId(
+        string memory _assetId,
+        address _entity
+    ) public onlyPatient {
+        patients[msg.sender].accessGrantedPerAssetId[_assetId][_entity] = true;
     }
 
-    // Function for a patient to revoke access to their medical assets
-    function revokeAccess(address _entity) public onlyPatient {
-        patients[msg.sender].accessGranted[_entity] = false;
-    }
-
-    // Function to view a patient's medical asset IDs
-    function viewMedicalAssetIds(address _patient)
+    function viewAllAssetIds()
         public
         view
-        onlyAuthorized(_patient)
+        onlyPatient
         returns (string[] memory)
     {
-        return patients[_patient].medicalAssetIds;
+        return patients[msg.sender].medicalAssetIds;
+    }
+
+    // Function for a patient to revoke access to a specific medical asset
+    function revokeAccessToAssetId(
+        string memory _assetId,
+        address _entity
+    ) public onlyPatient {
+        patients[msg.sender].accessGrantedPerAssetId[_assetId][_entity] = false;
+    }
+
+    // Function to view a specific patient's medical asset ID
+    function viewMedicalAssetId(
+        address _patient,
+        string memory _assetId
+    )
+        public
+        view
+        onlyAuthorizedForAssetId(_patient, _assetId)
+        returns (string memory)
+    {
+        // Verify that the asset ID exists for the patient
+        bool assetExists = false;
+        for (uint i = 0; i < patients[_patient].medicalAssetIds.length; i++) {
+            if (
+                keccak256(bytes(patients[_patient].medicalAssetIds[i])) ==
+                keccak256(bytes(_assetId))
+            ) {
+                assetExists = true;
+                break;
+            }
+        }
+        require(assetExists, "Asset ID does not exist");
+        return _assetId;
     }
 }

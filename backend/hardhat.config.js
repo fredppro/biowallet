@@ -10,9 +10,11 @@ module.exports = {
       },
     },
   },
-  allowUnlimitedContractSize: true,
   networks: {
-    hardhat: {},
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
+
     /* ETH_MAINNET: {
       accounts: [`${process.env.PRIVATE_KEY}`],
       url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
@@ -22,7 +24,8 @@ module.exports = {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
     }, */
     ETH_SEPOLIA: {
-      accounts: [`${process.env.PRIVATE_KEY}`],
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      allowUnlimitedContractSize: true,
       url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
     },
   },
