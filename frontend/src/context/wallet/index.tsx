@@ -104,6 +104,8 @@ export const WalletContextProvider = ({
 
       const metadata = await magic.user.getInfo();
       console.log(metadata);
+      const aaa = await provider.account?.getAddress();
+      console.log(aaa);
       if (!metadata.publicAddress || !metadata.email) {
         throw new Error("Magic login failed");
       }

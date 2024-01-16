@@ -39,8 +39,8 @@
       ]
     },
     "/Users/fredpc/Documentos/tese/biowallet/backend/contracts/AssetManagement.sol": {
-      "lastModificationDate": 1704499374802,
-      "contentHash": "876fd4f6b60653fff217739d565ec691",
+      "lastModificationDate": 1705370025387,
+      "contentHash": "e31320a2bf565fe99576993d723924cf",
       "sourceName": "contracts/AssetManagement.sol",
       "solcConfig": {
         "version": "0.8.23",

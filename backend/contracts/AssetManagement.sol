@@ -8,90 +8,37 @@ contract AssetManagement {
         mapping(string => mapping(address => bool)) accessGrantedPerAssetId;
     }
 
+    event PatientRegistered(address indexed patientAddress, address indexed patient);
+
     mapping(address => Patient) private patients;
+    address[] private patientAddresses; // Array to keep track of all patient addresses
 
-    // Ensure that only the patient can call the function
     modifier onlyPatient() {
-        require(
-            patients[msg.sender].patientAddress == msg.sender,
-            "Only the patient can perform this action"
-        );
+        require(patients[msg.sender].patientAddress == msg.sender, "Only the patient can perform this action");
         _;
     }
 
-    // Ensure that only authorized entities can access the specific data
-    modifier onlyAuthorizedForAssetId(
-        address _patient,
-        string memory _assetId
-    ) {
-        require(
-            patients[_patient].accessGrantedPerAssetId[_assetId][msg.sender] ||
-                msg.sender == _patient,
-            "Not authorized for this asset ID"
-        );
+    modifier onlyAuthorizedForAssetId(address _patient, string memory _assetId) {
+        require(patients[_patient].accessGrantedPerAssetId[_assetId][msg.sender] || msg.sender == _patient, "Not authorized for this asset ID");
         _;
     }
 
-    function registerPatient() public {
-        require(
-            patients[msg.sender].patientAddress == address(0),
-            "Patient already registered"
-        );
-        patients[msg.sender].patientAddress = msg.sender;
+    function registerPatient(address _patient) public {
+        require(patients[_patient].patientAddress == address(0), "Patient already registered");
+        patients[_patient].patientAddress = _patient;
+        patientAddresses.push(_patient); // Add the patient's address to the array
+        emit PatientRegistered(msg.sender, _patient); 
     }
 
-    // Function for a patient to add a new medical asset ID
-    function addMedicalAssetId(string memory _id) public onlyPatient {
-        patients[msg.sender].medicalAssetIds.push(_id);
+    function addMedicalAssetId(string memory _id, address _patient) public {
+        patients[_patient].medicalAssetIds.push(_id);
     }
 
-    // Function for a patient to grant access to a specific medical asset
-    function grantAccessToAssetId(
-        string memory _assetId,
-        address _entity
-    ) public onlyPatient {
-        patients[msg.sender].accessGrantedPerAssetId[_assetId][_entity] = true;
-    }
-
-    function viewAllAssetIds()
-        public
-        view
-        onlyPatient
-        returns (string[] memory)
-    {
-        return patients[msg.sender].medicalAssetIds;
-    }
-
-    // Function for a patient to revoke access to a specific medical asset
-    function revokeAccessToAssetId(
-        string memory _assetId,
-        address _entity
-    ) public onlyPatient {
-        patients[msg.sender].accessGrantedPerAssetId[_assetId][_entity] = false;
-    }
-
-    // Function to view a specific patient's medical asset ID
-    function viewMedicalAssetId(
-        address _patient,
-        string memory _assetId
-    )
-        public
-        view
-        onlyAuthorizedForAssetId(_patient, _assetId)
-        returns (string memory)
-    {
-        // Verify that the asset ID exists for the patient
-        bool assetExists = false;
-        for (uint i = 0; i < patients[_patient].medicalAssetIds.length; i++) {
-            if (
-                keccak256(bytes(patients[_patient].medicalAssetIds[i])) ==
-                keccak256(bytes(_assetId))
-            ) {
-                assetExists = true;
-                break;
-            }
+    function getAllAssetIds() public view returns (string[][] memory) {
+        string[][] memory allAssetIds = new string[][](patientAddresses.length);
+        for (uint i = 0; i < patientAddresses.length; i++) {
+            allAssetIds[i] = patients[patientAddresses[i]].medicalAssetIds;
         }
-        require(assetExists, "Asset ID does not exist");
-        return _assetId;
+        return allAssetIds;
     }
 }

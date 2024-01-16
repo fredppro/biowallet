@@ -1,12 +1,18 @@
 "use client";
 import { useWalletContext } from "@/context/wallet";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { magic } from "@/config/magic";
+import { useMagicSigner } from "@/hooks/useMagicSigner";
+import { useAlchemyProvider } from "@/hooks/useAlchemyProvider";
 
 export default function Navbar() {
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
+  const { magic, signer } = useMagicSigner();
+  const { provider } = useAlchemyProvider();
+
+
 
   const handleSocialLogin = async () => {
     const baseURL = new URL("/", window.location.origin).href;
@@ -22,9 +28,16 @@ export default function Navbar() {
 
   const finishSocialLogin = async () => {
     try {
-      const result = await (magic as any).oauth.getRedirectResult();
+      if (!magic || !magic.user || !signer) {
+        throw new Error("Magic not initialized");
+      }
+
+      const result = await magic.oauth.getRedirectResult();
+      const owner = await provider?.account?.getAddress();
       // setUser(result);
       console.log(result);
+      console.log(owner);
+      
     } catch (err) {
       console.error(err);
     }
@@ -32,7 +45,7 @@ export default function Navbar() {
 
   useEffect(() => {
     finishSocialLogin();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { isLoggedIn, login, logout, username, scaAddress } =
     useWalletContext();
@@ -67,7 +80,7 @@ export default function Navbar() {
 
   return (
     <div className="flex flex-row justify-between items-end gap-[72px] max-md:flex-col max-md:text-center">
-      <div className="text-6xl font-bold">FRED's AA DAP</div>
+      <div className="text-6xl font-bold">FREDs AA DAP</div>
       <div className="flex flex-row items-end gap-[12px] max-md:flex-col max-md:text-center">
         {isLoggedIn ? (
           <a

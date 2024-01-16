@@ -1,5 +1,6 @@
 import { Magic } from 'magic-sdk';
 import { OAuthExtension } from '@magic-ext/oauth';
+import { magicApiKey } from './client';
 
 const createMagic = (key: string) => {
   return (
@@ -10,4 +11,4 @@ const createMagic = (key: string) => {
   );
 };
 
-export const magic = createMagic("pk_live_00742CDAA211A770");
+export const magic = createMagic(magicApiKey);
